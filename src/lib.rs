@@ -72,7 +72,7 @@ impl Querable for bitcoin::blockdata::block::Block {
         let hex: String = rpc.do_rpc(rpc_name, &[id.to_json_value(), 0.into()])?;
         let bytes = bitcoin::util::misc::hex_bytes(&hex)
             .map_err(|_e| Error::MalformedResponse { rpc_name })?;
-        Ok(bitcoin::network::serialize::deserialize(&bytes).map_err(|e| (rpc_name, e))?)
+        Ok(bitcoin::consensus::decode(&bytes).map_err(|e| (rpc_name, e))?)
     }
 }
 
@@ -84,7 +84,7 @@ impl Querable for bitcoin::blockdata::transaction::Transaction {
         let hex: String = rpc.do_rpc(rpc_name, &[id.to_json_value()])?;
         let bytes = bitcoin::util::misc::hex_bytes(&hex)
             .map_err(|_e| Error::MalformedResponse { rpc_name })?;
-        Ok(bitcoin::network::serialize::deserialize(&bytes).map_err(|e| (rpc_name, e))?)
+        Ok(bitcoin::consensus::decode(&bytes).map_err(|e| (rpc_name, e))?)
     }
 }
 
@@ -351,8 +351,8 @@ impl From<(&'static str, jsonrpc::Error)> for Error {
     }
 }
 
-impl From<(&'static str, bitcoin::network::serialize::Error)> for Error {
-    fn from(e: (&'static str, bitcoin::network::serialize::Error)) -> Error {
+impl From<(&'static str, bitcoin::network::Error)> for Error {
+    fn from(e: (&'static str, bitcoin::network::Error)) -> Error {
         Error::MalformedResponse { rpc_name: e.0 }
     }
 }
